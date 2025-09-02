@@ -4,7 +4,7 @@ git clone https://github.com/bhola-dev58/DebugVerse.git
 ```
 # How to run the project
 
-RUN Backend
+RUN Backend 
 ```
 cd backend
 uvicorn main:app --reload
