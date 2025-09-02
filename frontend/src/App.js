@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, Link } from 'react-router-dom';
 import CodeEditor from './components/CodeEditor';
+import AboutUs from './pages/AboutUs';   // ✅ Import AboutUs page
+
 import './App.css';
 
 const Navbar = () => {
@@ -10,9 +12,10 @@ const Navbar = () => {
         <span className="logo">AI Debug</span>
       </div>
       <div className="navbar-links">
-        <a href="https://github.com/your-repo" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/bhola-dev58" target="_blank" rel="noopener noreferrer">GitHub</a>
         <a href="#features">Features</a>
-        <a href="#about">About</a>
+        {/* ✅ Use Link instead of <a> for routing */}
+        <Link to="/about">About</Link>
       </div>
     </nav>
   );
@@ -93,6 +96,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/debug" element={<CodeEditor />} />
+        <Route path="/about" element={<AboutUs />} />  {/* ✅ Add About page route */}
       </Routes>
     </Router>
   );
