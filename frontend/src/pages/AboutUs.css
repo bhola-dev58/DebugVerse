@@ -1,0 +1,37 @@
+.about-container {
+  max-width: 800px;
+  margin: 60px auto;
+  padding: 20px;
+  background: #1e1e1e;
+  color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.about-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #4dabf7;
+}
+
+.about-text {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.highlight {
+  color: #4dabf7;
+  font-weight: bold;
+}
+
+.about-footer {
+  margin-top: 30px;
+  font-size: 0.95rem;
+  text-align: center;
+  border-top: 1px solid #444;
+  padding-top: 15px;
+  color: #ccc;
+}
