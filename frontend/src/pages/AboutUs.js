@@ -27,7 +27,16 @@ const AboutUs = () => {
 
       <div className="about-footer">
         <p>📩 Contact us: support@aidebug.com</p>
-        <p>🌐 Visit: github.com/bhola-dev58</p>
+       <p>
+    🌐 Visit:{" "}
+    <a 
+      href="https://github.com/bhola-dev58" 
+      target="_blank" 
+      rel="noopener noreferrer"
+    >
+      github.com/bhola-dev58
+    </a>
+  </p>
       </div>
     </div>
   );
