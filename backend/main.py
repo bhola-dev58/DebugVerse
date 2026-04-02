@@ -5,6 +5,10 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 import logging
+import subprocess
+import tempfile
+import shutil
+import re
 from markdown import markdown
 
 # Configure logging
@@ -85,6 +89,93 @@ async def debug_code(request: CodeRequest):
         logger.error(error_msg)
         return {
             "debug_response": error_msg,
+            "status": "error"
+        }
+
+@app.post("/execute")
+async def execute_code(request: CodeRequest):
+    try:
+        logger.info(f"Received execution request for {request.language} code")
+        
+        # Determine the execution command based on language
+        ext = ""
+        compile_cmd = None
+        run_cmd = ""
+        
+        if request.language.lower() == "python":
+            ext = ".py"
+            run_cmd = f"python3 code{ext}"
+        elif request.language.lower() in ["cpp", "c++"]:
+            ext = ".cpp"
+            compile_cmd = f"g++ code{ext} -o a.out"
+            run_cmd = "./a.out"
+        elif request.language.lower() == "c":
+            ext = ".c"
+            compile_cmd = f"gcc code{ext} -o a.out"
+            run_cmd = "./a.out"
+        elif request.language.lower() == "java":
+            # For Java, the filename MUST match the class name.
+            class_match = re.search(r"class\s+(\w+)", request.code)
+            class_name = class_match.group(1) if class_match else "Main"
+            file_name = f"{class_name}.java"
+            compile_cmd = f"javac {file_name}"
+            run_cmd = f"java {class_name}"
+        elif request.language.lower() == "javascript":
+            ext = ".js"
+            run_cmd = f"node code{ext}"
+        else:
+            return {"output": "Unsupported language", "status": "error"}
+
+        # Create a temporary directory to host the code file
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # For Java, file_name is already defined
+            if request.language.lower() != "java":
+                file_name = f"code{ext}"
+            
+            file_path = os.path.join(tmpdir, file_name)
+            with open(file_path, "w") as f:
+                f.write(request.code)
+            
+            # Step 3 & 4: Use the pre-built 'debugverse-sandbox' image
+            # -v mounts the temp directory to the container
+            # --rm removes the container after execution
+            # --network none disables network access for security
+            docker_cmd = [
+                "docker", "run", "--rm",
+                "--network", "none",
+                "-v", f"{tmpdir}:/home/sandboxuser",
+                "debugverse-sandbox",
+                "bash", "-c",
+                f"cd /home/sandboxuser && {compile_cmd + ' && ' if compile_cmd else ''} {run_cmd}"
+            ]
+            
+            logger.info(f"Running Docker command: {' '.join(docker_cmd)}")
+            
+            process = subprocess.run(
+                docker_cmd,
+                capture_output=True,
+                text=True,
+                timeout=10 # Step 3: Limited execution time
+            )
+            
+            output = process.stdout
+            errors = process.stderr
+            
+            status = "success" if process.returncode == 0 else "error"
+            
+            return {
+                "output": output if status == "success" else f"STDOUT:\n{output}\n\nSTDERR:\n{errors}",
+                "status": status
+            }
+            
+    except subprocess.TimeoutExpired:
+        logger.error("Execution timed out")
+        return {"output": "Error: Execution timed out (Time Limit Exceeded)", "status": "error"}
+    except Exception as e:
+        error_msg = f"Error in execute_code endpoint: {str(e)}"
+        logger.error(error_msg)
+        return {
+            "output": error_msg,
             "status": "error"
         }
 

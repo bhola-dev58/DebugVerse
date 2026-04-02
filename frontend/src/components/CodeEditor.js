@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import axios from "axios";
 
-// Add error handler for ResizeObserver
+// Helper for suppressing ResizeObserver errors
 const ignoreResizeObserverError = () => {
   const resizeObserverError = console.error;
   console.error = (...args) => {
@@ -17,48 +17,24 @@ const CodeEditor = () => {
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("javascript");
   const [debugResponse, setDebugResponse] = useState("");
+  const [executionOutput, setExecutionOutput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [debugHistory, setDebugHistory] = useState([]);
+  
   const editorRef = useRef(null);
   const editorContainerRef = useRef(null);
-  const resizeTimeoutRef = useRef(null);
-  const placeholder = "Type or paste your code here to debug...";
   const decorationIdsRef = useRef([]);
+  const placeholder = "// Type or paste your code here to debug...\n";
 
-  // Add ResizeObserver error handler
   useEffect(() => {
     ignoreResizeObserverError();
-  }, []);
-
-  // Improved resize handling with debounce
-  useEffect(() => {
-    if (editorRef.current && editorContainerRef.current) {
-      const handleResize = () => {
-        if (resizeTimeoutRef.current) {
-          clearTimeout(resizeTimeoutRef.current);
-        }
-
-        resizeTimeoutRef.current = setTimeout(() => {
-          if (editorRef.current) {
-            const container = editorContainerRef.current;
-            const containerWidth = container.getBoundingClientRect().width;
-            container.style.maxWidth = `${containerWidth}px`;
-            editorRef.current.layout();
-          }
-        }, 100);
-      };
-
-      const resizeObserver = new ResizeObserver(handleResize);
-      resizeObserver.observe(editorContainerRef.current);
-
-      return () => {
-        if (resizeTimeoutRef.current) {
-          clearTimeout(resizeTimeoutRef.current);
-        }
-        resizeObserver.disconnect();
-      };
+    
+    // Load history from session storage if any
+    const savedHistory = sessionStorage.getItem("debug_history");
+    if (savedHistory) {
+      setDebugHistory(JSON.parse(savedHistory));
     }
   }, []);
 
@@ -67,77 +43,32 @@ const CodeEditor = () => {
     setError("");
   };
 
-  const applyPlaceholderDecoration = (editor) => {
-    decorationIdsRef.current = editor.deltaDecorations(
-      [],
-      [
-        {
-          range: new window.monaco.Range(1, 1, 1, placeholder.length + 1),
-          options: {
-            inlineClassName: "placeholder-text",
-          },
-        },
-      ]
-    );
-  };
-
-  const removePlaceholderDecoration = (editor) => {
-    editor.deltaDecorations(decorationIdsRef.current, []);
-  };
-
   const handleEditorMount = (editor, monaco) => {
     editorRef.current = editor;
-    const model = editor.getModel();
-
-    // Configure editor for better performance and layout
-    editor.getModel().setEOL(0); // LF
-    editor.updateOptions({
-      renderWhitespace: "none",
-      wordWrap: "on",
-      formatOnPaste: true,
-      formatOnType: true,
-      scrollBeyondLastLine: false,
-      minimap: { enabled: false },
-      fixedOverflowWidgets: true, // Prevent widgets from expanding the editor
-      automaticLayout: false, // We'll handle layout manually
-    });
-
-    // Set initial width constraint
-    const container = editorContainerRef.current;
-    if (container) {
-      const containerWidth = container.getBoundingClientRect().width;
-      container.style.maxWidth = `${containerWidth}px`;
-      editor.layout();
-    }
-
-    if (!code && model.getValue() === "") {
-      model.setValue(placeholder);
+    
+    // Set placeholder if empty
+    if (!code) {
       setCode(placeholder);
-      applyPlaceholderDecoration(editor);
-      editor.setPosition({ lineNumber: 1, column: 1 });
     }
 
-    editor.onDidFocusEditorText(() => {
-      if (model.getValue() === placeholder) {
-        model.setValue("");
-        removePlaceholderDecoration(editor);
-      }
-    });
-
-    editor.onDidBlurEditorText(() => {
-      if (model.getValue().trim() === "") {
-        model.setValue(placeholder);
-        setCode(placeholder);
-        applyPlaceholderDecoration(editor);
-        editor.setPosition({ lineNumber: 1, column: 1 });
-      }
+    editor.updateOptions({
+      fontSize: 14,
+      fontFamily: "'JetBrains Mono', monospace",
+      lineNumbers: "on",
+      minimap: { enabled: false },
+      scrollBeyondLastLine: false,
+      automaticLayout: true,
+      padding: { top: 20 },
+      cursorBlinking: "smooth",
+      cursorSmoothCaretAnimation: "on",
+      smoothScrolling: true,
+      roundedSelection: true,
     });
   };
 
   const handleDebug = async () => {
-    const cleanCode = code.trim() === placeholder ? "" : code.trim();
-
-    if (!cleanCode) {
+    const cleanCode = code.trim();
+    if (!cleanCode || cleanCode === placeholder.trim()) {
       setError("Please enter some code to debug");
       return;
     }
@@ -145,24 +76,24 @@ const CodeEditor = () => {
     try {
       setLoading(true);
       setError("");
+      setExecutionOutput("");
       const response = await axios.post("http://localhost:8000/debug", {
         code: cleanCode,
         language,
       });
 
-      // Add to history
       const historyItem = {
         id: Date.now(),
-        timestamp: new Date().toLocaleString(),
+        timestamp: new Date().toLocaleTimeString(),
         language,
         code: cleanCode,
         response: response.data.debug_response,
-        error:
-          response.data.status === "error"
-            ? response.data.debug_response
-            : null,
+        type: "debug"
       };
-      setDebugHistory((prev) => [historyItem, ...prev]);
+      
+      const newHistory = [historyItem, ...debugHistory.slice(0, 9)];
+      setDebugHistory(newHistory);
+      sessionStorage.setItem("debug_history", JSON.stringify(newHistory));
 
       if (response.data.status === "error") {
         setError(response.data.debug_response);
@@ -171,110 +102,190 @@ const CodeEditor = () => {
         setDebugResponse(response.data.debug_response);
         setError("");
       }
-    } catch (error) {
-      console.error("Error debugging code:", error);
-      const errorMessage =
-        error.response?.data?.debug_response ||
-        "Error occurred while debugging the code.";
-      setError(errorMessage);
-      setDebugResponse("");
-
-      // Add error to history
-      const historyItem = {
-        id: Date.now(),
-        timestamp: new Date().toLocaleString(),
-        language,
-        code: cleanCode,
-        error: errorMessage,
-      };
-      setDebugHistory((prev) => [historyItem, ...prev]);
+    } catch (err) {
+      setError(err.response?.data?.debug_response || "Failed to analyze code.");
     } finally {
       setLoading(false);
     }
   };
 
-  const loadHistoryItem = (item) => {
-    setCode(item.code);
-    setLanguage(item.language);
-    setDebugResponse(item.response || "");
-    setError(item.error || "");
+  const handleRun = async () => {
+    const cleanCode = code.trim();
+    if (!cleanCode || cleanCode === placeholder.trim()) {
+      setError("Please enter some code to run");
+      return;
+    }
+
+    try {
+      setRunning(true);
+      setError("");
+      setExecutionOutput("Launching sandbox environment... 🚀\n");
+      const response = await axios.post("http://localhost:8000/execute", {
+        code: cleanCode,
+        language: language === "cpp" ? "cpp" : language,
+      });
+
+      if (response.data.status === "error") {
+        setError("Execution failed");
+      }
+      setExecutionOutput(response.data.output);
+      setDebugResponse("");
+    } catch (err) {
+      setExecutionOutput("Execution Error: Check if the Docker sandbox is built and the backend is running.\n" + (err.response?.data?.output || ""));
+      setError("Connection refused");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const clearHistory = () => {
+    setDebugHistory([]);
+    sessionStorage.removeItem("debug_history");
   };
 
   return (
-    <div className="code-editor-container">
-      <style>
-        {`
-          .placeholder-text {
-            color: rgb(124, 124, 124) !important;
-            font-style: italic;
-          }
-        `}
-      </style>
+    <div className="App">
+      <nav className="navbar">
+        <div className="navbar-brand">
+          <span className="logo">DebugVerse.</span>
+        </div>
+        <div className="navbar-links">
+          <a href="/">Home</a>
+          <a href="/debug">Editor</a>
+          <button className="language-selector" style={{marginLeft: '20px'}}>v0.1.0-alpha</button>
+        </div>
+      </nav>
 
-      <div className="main-content">
-        {error && (
-          <div className="error-message">
-            <h3>Error:</h3>
-            <pre>{error}</pre>
+      <div className="code-editor-container">
+        {/* Main Editor Section */}
+        <section className="editor-section" ref={editorContainerRef}>
+          <div className="editor-header">
+            <div className="header-left">
+              <span style={{color: 'var(--text-muted)', fontSize: '0.8rem', marginRight: '12px'}}>Language:</span>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="language-selector"
+              >
+                <option value="javascript">JavaScript</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="cpp">C++</option>
+              </select>
+            </div>
+            <div className="header-right">
+               <span style={{color: 'var(--accent-primary)', fontSize: '0.8rem'}}>● Connected</span>
+            </div>
           </div>
-        )}
 
-        {debugResponse && (
-          <div className="debug-output">
-            <h3>Debug Results:</h3>
-            <div
-              className="debug-content"
-              dangerouslySetInnerHTML={{ __html: debugResponse }}
+          <div className="editor-wrapper">
+            <Editor
+              height="100%"
+              defaultLanguage={language}
+              language={language}
+              value={code}
+              onChange={handleEditorChange}
+              onMount={handleEditorMount}
+              theme="vs-dark"
+              loading={<div className="editor-loading">Initializing environment...</div>}
             />
           </div>
-        )}
-      </div>
-      <div className="editor-section" ref={editorContainerRef}>
-        <select
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-          className="language-selector"
-        >
-          <option value="javascript">JavaScript</option>
-          <option value="python">Python</option>
-          <option value="java">Java</option>
-          <option value="cpp">C++</option>
-        </select>
 
-        <div className="editor-wrapper">
-          <Editor
-            height="400px"
-            defaultLanguage={language}
-            value={code}
-            onChange={handleEditorChange}
-            onMount={handleEditorMount}
-            theme="vs-dark"
-            loading={<div className="editor-loading">Loading editor...</div>}
-            options={{
-              fontSize: 14,
-              lineNumbers: "on",
-              roundedSelection: false,
-              scrollBeyondLastLine: false,
-              minimap: { enabled: false },
-              scrollbar: {
-                vertical: "visible",
-                horizontal: "visible",
-                useShadows: false,
-                verticalScrollbarSize: 10,
-                horizontalScrollbarSize: 10,
-              },
-            }}
-          />
+          <div className="button-group">
+            <button
+              onClick={handleDebug}
+              disabled={loading || running}
+              className="debug-button"
+            >
+              {loading ? "Analyzing..." : "✨ AI Debug"}
+            </button>
+            <button
+              onClick={handleRun}
+              disabled={loading || running}
+              className="run-button"
+            >
+              {running ? "Executing..." : "▶ Run Code"}
+            </button>
+          </div>
+        </section>
+
+        {/* Dynamic Sidebar for Results & History */}
+        <aside className="sidebar-section">
+          {/* Debug Response Card */}
+          {(debugResponse || error) && (
+            <div className="sidebar-card">
+              <h3>{error ? "❌ Error" : "🤖 AI Analysis"}</h3>
+              {error ? (
+                <div className="error-message">{error}</div>
+              ) : (
+                <div 
+                  className="debug-output"
+                  dangerouslySetInnerHTML={{ __html: debugResponse }}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Execution Output Card */}
+          {executionOutput && (
+            <div className="sidebar-card">
+              <h3>📟 Console Output</h3>
+              <div className="execution-output">
+                {executionOutput}
+              </div>
+            </div>
+          )}
+
+          {/* History Card */}
+          <div className="sidebar-card">
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
+              <h3 style={{marginBottom: 0}}>🕒 Recent Activity</h3>
+              {debugHistory.length > 0 && (
+                <span onClick={clearHistory} style={{fontSize: '0.7rem', color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline'}}>Clear All</span>
+              )}
+            </div>
+            <div className="history-list">
+              {debugHistory.length === 0 ? (
+                <p style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>No recent activity found.</p>
+              ) : (
+                debugHistory.map(item => (
+                  <div key={item.id} className="history-item" onClick={() => {
+                    setLanguage(item.language);
+                    setCode(item.code);
+                    if (item.type === 'debug') {
+                      setDebugResponse(item.response);
+                      setExecutionOutput("");
+                    }
+                  }} style={{
+                    padding: '10px',
+                    borderRadius: '8px',
+                    background: 'var(--bg-tertiary)',
+                    marginBottom: '8px',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    transition: 'var(--transition-fast)',
+                    border: '1px solid transparent'
+                  }}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)'}}>
+                      <span>{item.language.toUpperCase()}</span>
+                      <span>{item.timestamp}</span>
+                    </div>
+                    <div style={{color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                      {item.code.substring(0, 30)}...
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <footer className="App-footer">
+        <div style={{textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem'}}>
+          <p>© 2026 DebugVerse. All rights reserved.</p>
         </div>
-
-        <button
-          onClick={handleDebug}
-          disabled={loading || !code.trim() || code === placeholder}
-          className="debug-button"
-        >
-          {loading ? "Debugging..." : "Debug Code"}
-        </button>
-      </div>
+      </footer>
     </div>
   );
 };
