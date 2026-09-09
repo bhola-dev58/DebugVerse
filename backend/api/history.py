@@ -147,7 +147,6 @@ async def clear_all_history(
     current_user: Dict = Depends(get_current_user),
 ):
     """Delete ALL debug sessions for the authenticated user."""
-    global _dev_sessions
     _dev_sessions.clear()
 
     user_id = current_user["sub"]
