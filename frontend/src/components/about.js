@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 const AboutUs = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white flex flex-col items-center p-8">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-8">
       <motion.h1
         className="text-4xl font-bold mb-6 text-center"
         initial={{ opacity: 0, y: -30 }}

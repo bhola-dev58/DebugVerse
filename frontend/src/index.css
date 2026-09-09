@@ -1,55 +1,113 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Colors */
-  --bg-primary: #050505;
-  --bg-secondary: #0f1115;
-  --bg-tertiary: #1a1d23;
-  
-  --accent-primary: #10b981; /* Emerald */
-  --accent-secondary: #3b82f6; /* Blueish */
-  --accent-gradient: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
-  
+  /* ── Core Backgrounds ── */
+  --bg-primary: #07090e;
+  --bg-secondary: #0d121d;
+  --bg-tertiary: #161e2e;
+  --bg-card: rgba(15, 23, 42, 0.75);
+
+  /* ── Accent Colors (Electric Emerald & Cyber Cyan) ── */
+  --accent-primary: #10b981;
+  --accent-secondary: #06b6d4;
+  --accent-violet: #8b5cf6;
+  --accent-gradient: #10b981; /* Solid primary accent (no gradients) */
+  --accent-glow: 0 0 24px rgba(16, 185, 129, 0.35);
+
+  /* ── Text Hierarchy ── */
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  
-  --glass-bg: rgba(15, 17, 21, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-  
+  --text-inverse: #020617;
+
+  /* ── Glassmorphism ── */
+  --glass-bg: rgba(13, 18, 29, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  --glass-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  --glass-glow: 0 0 30px rgba(99, 102, 241, 0.15);
+
+  /* ── Semantic Alerts ── */
   --error: #ef4444;
+  --error-bg: rgba(239, 68, 68, 0.12);
   --warning: #f59e0b;
+  --warning-bg: rgba(245, 158, 11, 0.12);
   --success: #10b981;
-  
-  /* Transitions */
-  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --success-bg: rgba(16, 185, 129, 0.12);
+  --info: #38bdf8;
+  --info-bg: rgba(56, 189, 248, 0.12);
+
+  /* ── Typography & Radius ── */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* ── Animation Curves ── */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-* {
+/* ── Light Theme Overrides ── */
+[data-theme="light"] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.85);
+
+  --accent-primary: #059669;
+  --accent-secondary: #0284c7;
+  --accent-violet: #7c3aed;
+  --accent-indigo: #4f46e5;
+  --accent-gradient: #059669; /* Solid light mode accent (no gradients) */
+  --accent-glow: 0 0 20px rgba(5, 150, 105, 0.2);
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --text-inverse: #ffffff;
+
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-border-hover: rgba(0, 0, 0, 0.15);
+  --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
 body {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-sans);
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  min-height: 100vh;
   overflow-x: hidden;
 }
 
-code, pre {
-  font-family: 'JetBrains Mono', monospace;
+h1, h2, h3, h4, .brand-font {
+  font-family: var(--font-heading);
+  letter-spacing: -0.025em;
+  font-weight: 700;
 }
 
-/* Custom Scrollbar */
+code, pre, .font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Custom modern scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -57,10 +115,16 @@ code, pre {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-tertiary);
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Global button focus states for WCAG compliance */
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }

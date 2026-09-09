@@ -1,0 +1,233 @@
+/* Navbar.css — High-End Glassmorphic Navigation */
+
+.dv-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 68px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4%;
+  z-index: 1000;
+  transition: all var(--transition-normal);
+}
+
+.dv-navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dv-logo {
+  display: flex;
+  align-items: baseline;
+  text-decoration: none;
+}
+
+.dv-logo-text {
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #10b981; /* Solid brand color */
+  letter-spacing: -0.03em;
+}
+
+.dv-logo-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--accent-secondary);
+  border-radius: 50%;
+  margin-left: 2px;
+  box-shadow: 0 0 10px var(--accent-secondary);
+}
+
+.dv-logo-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  text-transform: uppercase;
+}
+
+.dv-navbar-center {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.dv-nav-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  padding: 6px 4px;
+  position: relative;
+}
+
+.dv-nav-link:hover {
+  color: var(--text-primary);
+}
+
+.dv-nav-link.active {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.dv-nav-link.active::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-primary);
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--accent-primary);
+}
+
+.dv-navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.dv-tier-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.dv-tier-badge.tier-free {
+  background: rgba(100, 116, 139, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.dv-tier-badge.tier-pro {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+.dv-tier-badge.tier-enterprise {
+  background: rgba(139, 92, 246, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.25);
+}
+
+.dv-user-menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dv-user-avatar-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 10px 4px 4px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all var(--transition-fast);
+}
+
+.dv-user-avatar-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dv-avatar-letter {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #10b981; /* Solid brand color */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #041f17;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.dv-user-name {
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.dv-logout-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color var(--transition-fast);
+}
+
+.dv-logout-btn:hover {
+  color: var(--error);
+}
+
+.dv-signin-btn {
+  background: #10b981; /* Solid emerald */
+  color: #031510;
+  text-decoration: none;
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+}
+
+.dv-signin-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.dv-theme-toggle-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all var(--transition-fast);
+}
+
+.dv-theme-toggle-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  transform: rotate(20deg);
+}
+
+@media (max-width: 768px) {
+  .dv-navbar-center {
+    display: none;
+  }
+}

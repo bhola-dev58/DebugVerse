@@ -1,0 +1,87 @@
+{
+  "name": "debugverse-ai",
+  "displayName": "DebugVerse — 4x Multi-Agent AI Debugger",
+  "description": "Parallel AI code debugger powered by 4 specialized agents (Root Cause, Security Auditor, Performance Profiler, Test Generator) with RAG semantic search.",
+  "version": "1.0.0",
+  "publisher": "DebugVerse",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Testing",
+    "Other"
+  ],
+  "keywords": [
+    "debugger",
+    "ai",
+    "multi-agent",
+    "claude",
+    "gemini",
+    "rag",
+    "security"
+  ],
+  "main": "./src/extension.js",
+  "activationEvents": [
+    "onCommand:debugverse.analyzeSelection",
+    "onCommand:debugverse.indexWorkspace",
+    "onCommand:debugverse.openStudio"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "debugverse.analyzeSelection",
+        "title": "DebugVerse: Run 4-Agent Parallel Analysis",
+        "icon": "$(zap)"
+      },
+      {
+        "command": "debugverse.indexWorkspace",
+        "title": "DebugVerse: Index Workspace into RAG Vector Store",
+        "icon": "$(database)"
+      },
+      {
+        "command": "debugverse.openStudio",
+        "title": "DebugVerse: Open Web Studio",
+        "icon": "$(globe)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "debugverse.analyzeSelection",
+        "key": "ctrl+alt+d",
+        "mac": "cmd+alt+d",
+        "when": "editorTextFocus"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "debugverse.analyzeSelection",
+          "group": "DebugVerse@1"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "DebugVerse",
+      "properties": {
+        "debugverse.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:8001",
+          "description": "Base URL of the DebugVerse API server"
+        },
+        "debugverse.token": {
+          "type": "string",
+          "default": "dev-mock-token",
+          "description": "DebugVerse authentication token or API key"
+        },
+        "debugverse.model": {
+          "type": "string",
+          "enum": ["auto", "claude-3-5-sonnet", "gemini-2.5-flash"],
+          "default": "auto",
+          "description": "Preferred AI model router tier"
+        }
+      }
+    }
+  }
+}

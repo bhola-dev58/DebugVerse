@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # ── React 19 Frontend (Served via Nginx) ──────────────────────────────────
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
+
+  # ── FastAPI Backend Microservice (Auto-scalable) ──────────────────────────
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - REDIS_URL=redis://redis:6379/0
+      - PORT=8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    restart: always
+
+  # ── Redis Cache & Asynchronous Task Queue ─────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: always
+
+volumes:
+  redis-data:

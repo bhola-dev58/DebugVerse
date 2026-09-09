@@ -1,6 +1,22 @@
 fastapi
-uvicorn
-google-generativeai
+uvicorn[standard]
+google-genai
+boto3
 python-dotenv
 pydantic
 markdown
+# Auth & DB
+supabase
+python-jose[cryptography]
+httpx
+# Billing
+stripe
+# Rate Limiting & Caching
+slowapi
+redis[asyncio]
+# Observability
+opentelemetry-sdk
+opentelemetry-instrumentation-fastapi
+prometheus-client
+qdrant-client
+numpy

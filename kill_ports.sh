@@ -1,14 +1,24 @@
 #!/bin/bash
 
-# Kill processes on port 8000 (Backend)
-echo "Killing processes on port 8000..."
-fuser -k 8000/tcp || echo "No process on port 8000."
+echo "Stopping DebugVerse..."
 
-# Kill processes on port 3000 (Frontend)
-echo "Killing processes on port 3000..."
-fuser -k 3000/tcp || echo "No process on port 3000."
+# 1. Kill tracked PIDs
+if [ -f .pids ]; then
+    while read -r pid; do
+        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            echo "Killing tracked process $pid..."
+            kill "$pid" 2>/dev/null
+        fi
+    done < .pids
+    rm -f .pids
+fi
 
-echo "Cleaning up log files..."
+# 2. Kill by port if any linger
+for port in 8000 8001 3000 3001; do
+    fuser -k "${port}/tcp" 2>/dev/null
+done
+
+# 3. Clean up log files
 rm -f backend.log frontend.log
 
-echo "Done!"
+echo "DebugVerse stopped and cleaned up."

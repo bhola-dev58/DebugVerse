@@ -1,104 +1,75 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import CodeEditor from './components/CodeEditor';
-import AboutUs from './pages/AboutUs';   // ✅ Import AboutUs page
+import AboutUs from './pages/AboutUs';
+import Auth from './pages/Auth';
+import Pricing from './pages/Pricing';
+import Dashboard from './pages/Dashboard';
+import Landing from './pages/Landing';
 
 import './App.css';
 
-const Navbar = () => {
-  return (
-    <nav className="navbar">
-      <div className="navbar-brand">
-        <span className="logo">AI Debug</span>
-      </div>
-      <div className="navbar-links">
-        <a href="https://github.com/bhola-dev58" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href="#features">Features</a>
-        {/* ✅ Use Link instead of <a> for routing */}
-        <Link to="/about">About</Link>
-      </div>
-    </nav>
-  );
-};
-
-const Home = () => {
-  const navigate = useNavigate();
-  const [isVisible, setIsVisible] = useState(false);
+// ── Theme Hook ──────────────────────────────────────────────────────────────
+const useTheme = () => {
+  const [theme, setTheme] = useState(() => localStorage.getItem('dv-theme') || 'dark');
 
   useEffect(() => {
-    setIsVisible(true);
-  }, []);
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('dv-theme', theme);
+  }, [theme]);
 
-  const handleStartDebugging = () => {
-    navigate('/debug');
-  };
-
-  return (
-    <div className="App">
-      <Navbar />
-      <main className="hero-section">
-        <div className={`hero-content ${isVisible ? 'visible' : ''}`}>
-          <h1 className="hero-title">
-            Debug Smarter, <span className="highlight">Not Harder</span>
-          </h1>
-          <p className="hero-subtitle">
-            Your AI-powered debugging companion that helps you find and fix bugs faster than ever
-          </p>
-          <button className="cta-button" onClick={handleStartDebugging}>
-            Start Debugging
-            <span className="button-arrow">→</span>
-          </button>
-        </div>
-        
-        <section id="features" className="features-section">
-          <h2>Why Choose AI Debug?</h2>
-          <div className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon">🤖</div>
-              <h3>AI-Powered Analysis</h3>
-              <p>Advanced algorithms to detect and analyze code issues</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">⚡</div>
-              <h3>Real-Time Debugging</h3>
-              <p>Get instant feedback and suggestions as you code</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">🎯</div>
-              <h3>Precise Solutions</h3>
-              <p>Accurate and context-aware bug fixing recommendations</p>
-            </div>
-          </div>
-        </section>
-      </main>
-      <footer className="App-footer">
-        <div className="footer-content">
-          <div className="footer-section">
-            <h3>AI Code Debugger</h3>
-            <p>Making debugging smarter and faster</p>
-          </div>
-          <div className="footer-section">
-            <p>© 2025 AI Debug. All rights reserved.</p>
-            <div className="footer-links">
-              <a href="#terms">Terms of Service</a>
-              <a href="#privacy">Privacy Policy</a>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
+  const toggleTheme = () => setTheme(t => (t === 'dark' ? 'light' : 'dark'));
+  return { theme, toggleTheme };
 };
 
+// ── Protected Route ──────────────────────────────────────────────────────────
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
+        <div style={{ width: 40, height: 40, border: '3px solid var(--glass-border)', borderTopColor: 'var(--accent-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    );
+  }
+  return isAuthenticated ? children : <Navigate to="/auth" replace />;
+};
+
+// ── Main App Root ────────────────────────────────────────────────────────────
+
 function App() {
+  const { theme, toggleTheme } = useTheme();
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/debug" element={<CodeEditor />} />
-        <Route path="/about" element={<AboutUs />} />  {/* ✅ Add About page route */}
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Landing theme={theme} toggleTheme={toggleTheme} />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route
+            path="/debug"
+            element={
+              <ProtectedRoute>
+                <CodeEditor />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
